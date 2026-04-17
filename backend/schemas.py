@@ -60,6 +60,15 @@ class StationResponse(StationCreate):
         from_attributes = True
 
 
+class SystemStats(BaseModel):
+    total_records: int
+    total_alerts: int
+    total_stations: int
+    active_alerts: int
+    avg_stock_pct: float
+    latest_update: Optional[datetime]
+
+
 # ── KPI Analytics schemas ──────────────────────────────────────
 
 class StockKPIs(BaseModel):
