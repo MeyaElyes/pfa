@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List
-from database import get_db
-from schemas import StationSummary, SystemStats
-from services import queries
+from backend.database import get_db
+from backend.schemas import StationFuelSnapshot as StationSummary, SystemStats
+from backend.services import queries
 
 router = APIRouter()
 

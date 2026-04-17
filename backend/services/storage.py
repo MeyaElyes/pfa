@@ -1,22 +1,22 @@
 from sqlalchemy.orm import Session
-from models import FuelLog, Alert
-from schemas import FuelDataCreate
+from backend.models import FuelData, Alert
+from backend.schemas import FuelData as FuelDataSchema
 from datetime import datetime
 
 
-def save_fuel_data(db: Session, data: FuelDataCreate) -> FuelLog:
-    record = FuelLog(**data.model_dump())
+def save_fuel_data(db: Session, data: FuelDataSchema) -> FuelData:
+    record = FuelData(**data.model_dump())
     db.add(record)
     db.commit()
     db.refresh(record)
     return record
 
 
-def save_fuel_data_batch(db: Session, records: list[FuelDataCreate]) -> list[FuelLog]:
+def save_fuel_data_batch(db: Session, records: list[FuelDataSchema]) -> list[FuelData]:
     """Save multiple fuel records in a single transaction."""
     db_records = []
     for data in records:
-        record = FuelLog(**data.model_dump())
+        record = FuelData(**data.model_dump())
         db.add(record)
         db_records.append(record)
     db.commit()
@@ -25,7 +25,7 @@ def save_fuel_data_batch(db: Session, records: list[FuelDataCreate]) -> list[Fue
     return db_records
 
 
-def run_alert_checks(db: Session, data: FuelDataCreate) -> int:
+def run_alert_checks(db: Session, data: FuelDataSchema) -> int:
     """Run all alert checks and return the number of alerts generated."""
     alerts = []
 
@@ -105,10 +105,10 @@ def run_alert_checks(db: Session, data: FuelDataCreate) -> int:
 
 
 def run_alert_checks_for_station(db: Session, station_id: str) -> int:
-    from services.queries import get_latest_per_fuel
+    from backend.services.queries import get_latest_per_fuel
     total = 0
     records = get_latest_per_fuel(db, station_id)
     for r in records:
-        data = FuelDataCreate.model_validate(r.__dict__)
+        data = FuelDataSchema.model_validate(r.__dict__)
         total += run_alert_checks(db, data)
     return total

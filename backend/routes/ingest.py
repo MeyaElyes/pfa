@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
-from schemas import FuelDataCreate, FuelDataResponse, BatchIngestRequest, BatchIngestResponse
-from services import storage
+from backend.database import get_db
+from backend.schemas import FuelData as FuelDataSchema, FuelDataResponse, BatchIngestRequest, BatchIngestResponse
+from backend.services import storage
 
 router = APIRouter()
 
 
 @router.post("/", response_model=FuelDataResponse, status_code=201)
-def ingest_fuel_data(payload: FuelDataCreate, db: Session = Depends(get_db)):
+def ingest_fuel_data(payload: FuelDataSchema, db: Session = Depends(get_db)):
     """Receives and stores a single fuel data reading."""
     try:
         record = storage.save_fuel_data(db, payload)

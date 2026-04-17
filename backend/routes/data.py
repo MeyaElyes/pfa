@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from database import get_db
-from schemas import FuelDataResponse, AlertResponse
-from services import queries
+from backend.database import get_db
+from backend.schemas import FuelDataResponse, AlertResponse
+from backend.services import queries
 
 router = APIRouter()
 
@@ -46,6 +46,6 @@ def list_stations(db: Session = Depends(get_db)):
 @router.post("/run-agent")
 def run_agent(station_id: str = Query(...), db: Session = Depends(get_db)):
     """Manually triggers agent analysis for testing."""
-    from services.storage import run_alert_checks_for_station
+    from backend.services.storage import run_alert_checks_for_station
     alert_count = run_alert_checks_for_station(db, station_id)
     return {"status": "Agent ran successfully", "station_id": station_id, "alerts_generated": alert_count}

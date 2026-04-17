@@ -3,9 +3,9 @@ from datetime import datetime
 from typing import Literal, Optional, List
 
 
-# ── Fuel Data ──────────────────────────────────────────────
+# ── Fuel Data (Transferred Data FrontEnd-BackEnd-Database) ──
 
-class FuelDataCreate(BaseModel):
+class FuelData(BaseModel):
     timestamp: datetime
     station_id: str
     company: str
@@ -17,7 +17,7 @@ class FuelDataCreate(BaseModel):
     sales_last_5min_liters: float = Field(..., ge=0)
 
 
-class FuelDataResponse(FuelDataCreate):
+class FuelDataResponse(FuelData):
     id: int
 
     class Config:
@@ -25,8 +25,8 @@ class FuelDataResponse(FuelDataCreate):
 
 
 class BatchIngestRequest(BaseModel):
-    """Accept multiple fuel readings at once."""
-    records: List[FuelDataCreate]
+    """Accept multiple fuel readings at once (Extension to spec)."""
+    records: List[FuelData]
 
 
 class BatchIngestResponse(BaseModel):
@@ -37,14 +37,11 @@ class BatchIngestResponse(BaseModel):
 # ── Alerts ─────────────────────────────────────────────────
 
 class AlertResponse(BaseModel):
-    id: int
     timestamp: datetime
     station_id: str
     fuel_type: str
     alert_type: str
-    severity: str
     message: str
-    resolved: bool
 
     class Config:
         from_attributes = True
@@ -54,41 +51,46 @@ class AlertResponse(BaseModel):
 
 class StationCreate(BaseModel):
     station_id: str
-    name: str
     company: str
-    governorate: str
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
+    location: str
 
 
 class StationResponse(StationCreate):
-    id: int
-
     class Config:
         from_attributes = True
 
 
-# ── Analytics ──────────────────────────────────────────────
+# ── KPI Analytics schemas ──────────────────────────────────────
 
-class StationSummary(BaseModel):
-    station_id: str
-    company: str
-    fuel_type: str
-    latest_price_tnd: float
-    official_price_tnd: float
-    price_deviation_pct: float
-    stock_pct: float
+class StockKPIs(BaseModel):
     stock_liters: float
-    capacity_liters: float
-    consumption_rate_lph: float  # liters per hour (estimated)
-    hours_until_empty: Optional[float]
-    alert_count: int
+    stock_utilization_pct: float
+    stock_depletion_rate_lph: Optional[float]  # (stock_now - previous) / time
+    low_stock_flag: int  # 1 if < 15%, 0 otherwise
 
 
-class SystemStats(BaseModel):
-    total_records: int
-    total_alerts: int
-    total_stations: int
-    active_alerts: int
-    avg_stock_pct: float
-    latest_update: Optional[datetime]
+class SalesKPIs(BaseModel):
+    sales_last_5min_liters: float
+    estimated_daily_sales: float
+
+
+class PriceKPIs(BaseModel):
+    price_deviation: float
+    price_deviation_pct: float
+    price_anomaly_flag: int
+
+
+class OpKPIs(BaseModel):
+    data_freshness_minutes: float
+
+
+class StationFuelSnapshot(BaseModel):
+    fuel_type: str
+    price_tnd: float
+    stock_liters: float
+    
+    # Specific requested KPIs
+    stock_kpis: StockKPIs
+    sales_kpis: SalesKPIs
+    price_kpis: PriceKPIs
+    op_kpis: OpKPIs
