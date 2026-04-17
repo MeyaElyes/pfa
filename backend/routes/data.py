@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from backend.database import get_db
-from backend.schemas import FuelDataResponse, AlertResponse
+from backend.schemas import FuelDataResponse, AlertResponse, StationCreate, StationResponse
+from backend.models import Station
 from backend.services import queries
 
 router = APIRouter()
@@ -41,6 +42,24 @@ def get_alerts(
 def list_stations(db: Session = Depends(get_db)):
     """Returns all station IDs that have submitted data."""
     return queries.get_all_station_ids(db)
+
+
+@router.post("/stations", response_model=StationResponse, status_code=201)
+def create_station(payload: StationCreate, db: Session = Depends(get_db)):
+    """Create a station manually for testing or onboarding."""
+    existing = db.query(Station).filter(Station.station_id == payload.station_id).first()
+    if existing:
+        return existing
+
+    station = Station(
+        station_id=payload.station_id,
+        company=payload.company,
+        location=payload.location,
+    )
+    db.add(station)
+    db.commit()
+    db.refresh(station)
+    return station
 
 
 @router.post("/run-agent")

@@ -110,7 +110,17 @@ python seed_data.py
 | `/history` | GET | `station_id` (required), `fuel_type`, `limit` | Time-series data for charts |
 | `/alerts` | GET | `station_id`, `severity`, `alert_type`, `limit` | Filtered alert list |
 | `/stations` | GET | — | All station IDs that have submitted data |
+| `/stations` | POST | — | Create one station manually for testing |
 | `/run-agent` | POST | `station_id` (required) | Manually re-run alert checks |
+
+**Create one test station payload:**
+```json
+{
+  "station_id": "TEST-TUN-001",
+  "company": "AGIL",
+  "location": "Tunis"
+}
+```
 
 ### Analytics — Insights
 

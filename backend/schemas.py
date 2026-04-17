@@ -17,8 +17,17 @@ class FuelData(BaseModel):
     sales_last_5min_liters: float = Field(..., ge=0)
 
 
-class FuelDataResponse(FuelData):
+class FuelDataResponse(BaseModel):
     id: int
+    timestamp: datetime
+    station_id: str
+    company: Optional[str] = None
+    fuel_type: Literal["Gasoil50", "SansPlomb"]
+    price_tnd: float
+    official_price_tnd: float
+    stock_liters: float
+    capacity_liters: float
+    sales_last_5min_liters: float
 
     class Config:
         from_attributes = True

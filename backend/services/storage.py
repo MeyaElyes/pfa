@@ -1,11 +1,35 @@
 from sqlalchemy.orm import Session
-from backend.models import FuelData, Alert
+from backend.models import FuelData, Alert, Station
 from backend.schemas import FuelData as FuelDataSchema
 from datetime import datetime
 
 
+def _ensure_station_exists(db: Session, data: FuelDataSchema) -> None:
+    existing = db.query(Station).filter(Station.station_id == data.station_id).first()
+    if existing:
+        return
+
+    station = Station(
+        station_id=data.station_id,
+        company=data.company,
+        location="Unknown",
+    )
+    db.add(station)
+    db.flush()
+
+
 def save_fuel_data(db: Session, data: FuelDataSchema) -> FuelData:
-    record = FuelData(**data.model_dump())
+    _ensure_station_exists(db, data)
+    record = FuelData(
+        timestamp=data.timestamp,
+        station_id=data.station_id,
+        fuel_type=data.fuel_type,
+        price_tnd=data.price_tnd,
+        official_price_tnd=data.official_price_tnd,
+        stock_liters=data.stock_liters,
+        capacity_liters=data.capacity_liters,
+        sales_last_5min_liters=data.sales_last_5min_liters,
+    )
     db.add(record)
     db.commit()
     db.refresh(record)
@@ -16,7 +40,17 @@ def save_fuel_data_batch(db: Session, records: list[FuelDataSchema]) -> list[Fue
     """Save multiple fuel records in a single transaction."""
     db_records = []
     for data in records:
-        record = FuelData(**data.model_dump())
+        _ensure_station_exists(db, data)
+        record = FuelData(
+            timestamp=data.timestamp,
+            station_id=data.station_id,
+            fuel_type=data.fuel_type,
+            price_tnd=data.price_tnd,
+            official_price_tnd=data.official_price_tnd,
+            stock_liters=data.stock_liters,
+            capacity_liters=data.capacity_liters,
+            sales_last_5min_liters=data.sales_last_5min_liters,
+        )
         db.add(record)
         db_records.append(record)
     db.commit()
