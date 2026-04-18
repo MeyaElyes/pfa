@@ -1,11 +1,39 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
-*.db
-sql_app.db
-.env
+*.py[cod]
+*.so
 *.egg-info/
-dist/
-build/
+
+# Virtual environments
 .venv/
 venv/
+env/
+
+# Database files
+*.db
+*.sqlite3
+*.sqlite
+sql_app.db
+
+# Environment variables
+.env
+
+# Distribution / packaging
+build/
+dist/
+eggs/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Pytest cache
+.pytest_cache/
