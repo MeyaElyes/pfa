@@ -2,8 +2,9 @@ from datetime import datetime, timezone
 from typing import List, Literal, Optional
 
 from fastapi import APIRouter, Query
-
+from sqlalchemy.orm import Session
 from backend.schemas import AlertResponse, FuelData, FuelDataResponse
+from backend.services import storage
 
 router = APIRouter()
 
@@ -29,27 +30,39 @@ def create_record(payload: FuelData) -> FuelDataResponse:
     _fuel_records.append(record)
     return record
 
+# def _append_alert(station_id: str, fuel_type: str, alert_type: str, severity: str, message: str) -> None:
+#     _alerts.append(
+#         AlertResponse(
+#             timestamp=datetime.now(timezone.utc),
+#             station_id=station_id,
+#             fuel_type=fuel_type,
+#             alert_type=alert_type,
+#             severity=severity,
+#             message=message,
+#         )
+#     )
 
-def _append_alert(station_id: str, fuel_type: str, alert_type: str, severity: str, message: str) -> None:
-    _alerts.append(
-        AlertResponse(
-            timestamp=datetime.now(timezone.utc),
-            station_id=station_id,
-            fuel_type=fuel_type,
-            alert_type=alert_type,
-            severity=severity,
-            message=message,
-        )
+def _append_alert(db: Session, station_id: str, fuel_type: str, alert_type: str, severity: str, message: str) -> None:
+    """
+    Saves a new alert to the SQLite database using the storage service.
+    """
+    storage.create_alert(
+        db=db,
+        station_id=station_id,
+        fuel_type=fuel_type,
+        alert_type=alert_type,
+        severity=severity,
+        # Ensure your storage.create_alert accepts 'severity' 
+        # or add it to the models/storage logic if it's missing!
+        message=f"[{severity.upper()}] {message}" 
     )
-
-
-def generate_alerts_from_record(record: FuelDataResponse) -> int:
+def generate_alerts_from_record(db :Session ,record: FuelDataResponse) -> int:
     generated = 0
 
     if record.capacity_liters > 0:
         stock_pct = record.stock_liters / record.capacity_liters
         if stock_pct < 0.05:
-            _append_alert(
+            _append_alert(db,
                 record.station_id,
                 record.fuel_type,
                 "LOW_STOCK",
@@ -58,7 +71,7 @@ def generate_alerts_from_record(record: FuelDataResponse) -> int:
             )
             generated += 1
         elif stock_pct < 0.15:
-            _append_alert(
+            _append_alert(db,
                 record.station_id,
                 record.fuel_type,
                 "LOW_STOCK",
@@ -70,7 +83,7 @@ def generate_alerts_from_record(record: FuelDataResponse) -> int:
     if record.official_price_tnd > 0:
         deviation_pct = abs(record.price_tnd - record.official_price_tnd) / record.official_price_tnd
         if deviation_pct > 0.10:
-            _append_alert(
+            _append_alert(db,
                 record.station_id,
                 record.fuel_type,
                 "PRICE_ANOMALY",
@@ -79,7 +92,7 @@ def generate_alerts_from_record(record: FuelDataResponse) -> int:
             )
             generated += 1
         elif deviation_pct > 0.05:
-            _append_alert(
+            _append_alert(db,
                 record.station_id,
                 record.fuel_type,
                 "PRICE_ANOMALY",
@@ -89,7 +102,7 @@ def generate_alerts_from_record(record: FuelDataResponse) -> int:
             generated += 1
 
     if record.sales_last_5min_liters > 200:
-        _append_alert(
+        _append_alert(db,
             record.station_id,
             record.fuel_type,
             "HIGH_CONSUMPTION",
@@ -99,7 +112,7 @@ def generate_alerts_from_record(record: FuelDataResponse) -> int:
         generated += 1
 
     if record.stock_liters == 0:
-        _append_alert(
+        _append_alert(db,
             record.station_id,
             record.fuel_type,
             "STATION_CRITICAL",
