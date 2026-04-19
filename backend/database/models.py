@@ -41,5 +41,5 @@ class Alert(Base):
     station_id = Column(String, ForeignKey("stations.station_id")) 
     fuel_type = Column(String) 
     alert_type = Column(String)
-    severity = Column(String)# e.g., "LOW_STOCK" [cite: 175, 254]
+    severity = Column(String)
     message = Column(String) 
