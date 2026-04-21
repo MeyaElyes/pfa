@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from .. import models
+from ..database import models
 
 # --- WRITE METHODS ---
 
@@ -10,11 +10,12 @@ def store_fuel_data(db: Session, data):
     db.refresh(new_record)
     return new_record
 
-def create_alert(db: Session, station_id: str, fuel_type: str, alert_type: str, message: str):
+def create_alert(db: Session, station_id: str, fuel_type: str, alert_type: str, severity: str, message: str):
     new_alert = models.Alert(
         station_id=station_id,
         fuel_type=fuel_type,
         alert_type=alert_type,
+        severity=severity,
         message=message
     )
     db.add(new_alert)

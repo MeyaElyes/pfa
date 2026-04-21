@@ -1,46 +1,30 @@
 from datetime import datetime, timezone
 from typing import List, Literal, Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from backend.schemas import AlertResponse, FuelData, FuelDataResponse
 from backend.services import storage
+from backend.database import models
+from backend.database.database import get_db
 
 router = APIRouter()
 
 
-_fuel_records: list[FuelDataResponse] = []
-_alerts: list[AlertResponse] = []
+def create_record(db: Session, payload: FuelData) -> FuelDataResponse:
+    # 1. Create a new database model instance from the payload
+    # We use **payload.dict() to unpack the Pydantic model into the DB model
+    db_record = FuelData(**payload.dict())
 
+    # 2. Add to the session and commit to the database
+    db.add(db_record)
+    db.commit()
 
-def create_record(payload: FuelData) -> FuelDataResponse:
-    # Swap this in-memory list for a persisted insert when a database is wired in.
-    record = FuelDataResponse(
-        id=len(_fuel_records) + 1,
-        timestamp=payload.timestamp,
-        station_id=payload.station_id,
-        company=payload.company,
-        fuel_type=payload.fuel_type,
-        price_tnd=payload.price_tnd,
-        official_price_tnd=payload.official_price_tnd,
-        stock_liters=payload.stock_liters,
-        capacity_liters=payload.capacity_liters,
-        sales_last_5min_liters=payload.sales_last_5min_liters,
-    )
-    _fuel_records.append(record)
-    return record
+    # 3. Refresh to get the auto-generated ID from the DB
+    db.refresh(db_record)
 
-# def _append_alert(station_id: str, fuel_type: str, alert_type: str, severity: str, message: str) -> None:
-#     _alerts.append(
-#         AlertResponse(
-#             timestamp=datetime.now(timezone.utc),
-#             station_id=station_id,
-#             fuel_type=fuel_type,
-#             alert_type=alert_type,
-#             severity=severity,
-#             message=message,
-#         )
-#     )
+    return db_record
 
 def _append_alert(db: Session, station_id: str, fuel_type: str, alert_type: str, severity: str, message: str) -> None:
     """
@@ -52,8 +36,6 @@ def _append_alert(db: Session, station_id: str, fuel_type: str, alert_type: str,
         fuel_type=fuel_type,
         alert_type=alert_type,
         severity=severity,
-        # Ensure your storage.create_alert accepts 'severity' 
-        # or add it to the models/storage logic if it's missing!
         message=f"[{severity.upper()}] {message}" 
     )
 def generate_alerts_from_record(db :Session ,record: FuelDataResponse) -> int:
@@ -124,14 +106,59 @@ def generate_alerts_from_record(db :Session ,record: FuelDataResponse) -> int:
     return generated
 
 
+@router.get("/stations")
+def get_stations(db: Session = Depends(get_db)):
+    """Get all stations that have fuel data in the database."""
+    # Get distinct station_ids from fuel_data table
+    station_ids = db.query(models.FuelData.station_id).distinct().all()
+    station_ids = [s[0] for s in station_ids]
+    
+    # For now, return basic station info. In a real system, you'd have a stations table
+    stations = []
+    for station_id in station_ids:
+        # Get company and location from the most recent record for this station
+        latest_record = db.query(models.FuelData).filter(
+            models.FuelData.station_id == station_id
+        ).order_by(models.FuelData.timestamp.desc()).first()
+        
+        if latest_record:
+            # In a real system, you'd have a proper stations table with this metadata
+            # For now, we'll use mock data based on station_id
+            location_map = {
+                "BI00001": "Tunis Centre",
+                "BI00002": "Tunis Nord", 
+                "BI00003": "Sousse"
+            }
+            stations.append({
+                "station_id": station_id,
+                "company": "AGIL",
+                "location": location_map.get(station_id, f"Station {station_id}")
+            })
+    
+    return stations
+
+
+@router.get("/companies")
+def get_companies(db: Session = Depends(get_db)):
+    """Get all unique companies from stations."""
+    # For now, return AGIL since that's the only company in our mock data
+    return ["AGIL"]
+
+
 @router.get("/current", response_model=List[FuelDataResponse])
-def get_current(station_id: str = Query(...)):
-    latest_by_fuel: dict[str, FuelDataResponse] = {}
-    for record in _fuel_records:
-        if record.station_id != station_id:
-            continue
-        latest_by_fuel[record.fuel_type] = record
-    return list(latest_by_fuel.values())
+def get_current(station_id: str = Query(...), db: Session = Depends(get_db)):
+    # Get the latest record for each fuel_type for the station
+    subquery = db.query(
+        models.FuelData.fuel_type,
+        func.max(models.FuelData.timestamp).label('max_ts')
+    ).filter(models.FuelData.station_id == station_id).group_by(models.FuelData.fuel_type).subquery()
+    
+    results = db.query(models.FuelData).join(
+        subquery,
+        (models.FuelData.fuel_type == subquery.c.fuel_type) & (models.FuelData.timestamp == subquery.c.max_ts)
+    ).all()
+    
+    return results
 
 
 @router.get("/history", response_model=List[FuelDataResponse])
@@ -139,13 +166,13 @@ def get_history(
     station_id: str = Query(...),
     fuel_type: Optional[Literal["Gasoil50", "SansPlomb"]] = Query(None),
     limit: int = Query(500, le=2000),
+    db: Session = Depends(get_db),
 ):
-    results = [
-        record
-        for record in _fuel_records
-        if record.station_id == station_id and (fuel_type is None or record.fuel_type == fuel_type)
-    ]
-    return results[-limit:]
+    query = db.query(models.FuelData).filter(models.FuelData.station_id == station_id)
+    if fuel_type:
+        query = query.filter(models.FuelData.fuel_type == fuel_type)
+    results = query.order_by(models.FuelData.timestamp.desc()).limit(limit).all()
+    return results[::-1]  # Return in ascending order
 
 
 @router.get("/alerts", response_model=List[AlertResponse])
@@ -154,12 +181,53 @@ def get_alerts(
     severity: Optional[Literal["warning", "critical"]] = Query(None),
     alert_type: Optional[Literal["LOW_STOCK", "PRICE_ANOMALY", "HIGH_CONSUMPTION", "STATION_CRITICAL"]] = Query(None),
     limit: int = Query(50, le=500),
+    db: Session = Depends(get_db),
 ):
-    results = _alerts
+    query = db.query(models.Alert)
     if station_id:
-        results = [alert for alert in results if alert.station_id == station_id]
+        query = query.filter(models.Alert.station_id == station_id)
     if severity:
-        results = [alert for alert in results if alert.severity == severity]
+        query = query.filter(models.Alert.severity == severity)
     if alert_type:
-        results = [alert for alert in results if alert.alert_type == alert_type]
-    return results[-limit:][::-1]
+        query = query.filter(models.Alert.alert_type == alert_type)
+    results = query.order_by(models.Alert.timestamp.desc()).limit(limit).all()
+    return results
+
+
+@router.get("/stations")
+def get_stations(db: Session = Depends(get_db)):
+    """Get all stations that have fuel data in the database."""
+    # Get distinct station_ids from fuel_data table
+    station_ids = db.query(models.FuelData.station_id).distinct().all()
+    station_ids = [s[0] for s in station_ids]
+    
+    # For now, return basic station info. In a real system, you'd have a stations table
+    stations = []
+    for station_id in station_ids:
+        # Get company and location from the most recent record for this station
+        latest_record = db.query(models.FuelData).filter(
+            models.FuelData.station_id == station_id
+        ).order_by(models.FuelData.timestamp.desc()).first()
+        
+        if latest_record:
+            # In a real system, you'd have a proper stations table with this metadata
+            # For now, we'll use mock data based on station_id
+            location_map = {
+                "BI00001": "Tunis Centre",
+                "BI00002": "Tunis Nord", 
+                "BI00003": "Sousse"
+            }
+            stations.append({
+                "station_id": station_id,
+                "company": "AGIL",
+                "location": location_map.get(station_id, f"Station {station_id}")
+            })
+    
+    return stations
+
+
+@router.get("/companies")
+def get_companies(db: Session = Depends(get_db)):
+    """Get all unique companies from stations."""
+    # For now, return AGIL since that's the only company in our mock data
+    return ["AGIL"]

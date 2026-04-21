@@ -7,7 +7,6 @@ from pydantic import BaseModel, ConfigDict, Field
 class FuelData(BaseModel):
     timestamp: datetime
     station_id: str = Field(..., min_length=1)
-    company: str = Field(..., min_length=1)
     fuel_type: Literal["Gasoil50", "SansPlomb"]
     price_tnd: float = Field(..., gt=0)
     official_price_tnd: float = Field(..., gt=0)
@@ -22,7 +21,6 @@ class FuelDataResponse(BaseModel):
     id: int
     timestamp: datetime
     station_id: str
-    company: Optional[str] = None
     fuel_type: Literal["Gasoil50", "SansPlomb"]
     price_tnd: float
     official_price_tnd: float
