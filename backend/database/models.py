@@ -41,4 +41,10 @@ class Alert(Base):
     fuel_type = Column(String) 
     alert_type = Column(String)
     severity = Column(String)
-    message = Column(String) 
+    message = Column(String)
+    
+    # Step 1: New fields for alert lifecycle management
+    status = Column(String, default="new")  # new / acknowledged / resolved
+    handled_by = Column(String, nullable=True)  # "agent" or "operator"
+    handled_at = Column(DateTime, nullable=True)  # When the alert was handled
+    fingerprint = Column(String, index=True, nullable=True)  # Hash for deduplication 

@@ -177,7 +177,7 @@ if st.session_state.view_mode == "single":
                     df['timestamp'] = df['timestamp'].dt.tz_convert('Africa/Tunis')
                 except:
                     # Fallback: assume it's already datetime or parse without timezone
-                    df['timestamp'] = pd.to_datetime(df['timestamp'])
+                    df['timestamp'] = pd.to_datetime(df['timestamp'],format='ISO8601')
                 
                 # Ensure data is sorted by timestamp
                 df = df.sort_values('timestamp').reset_index(drop=True)

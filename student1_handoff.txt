@@ -1,0 +1,174 @@
+========================================================
+STUDENT 1 — AGENT LEAD — HANDOFF REPORT (v2)
+Project: AGIL Fuel Monitor Pro
+Date: 2026-05-16
+========================================================
+
+--------------------------------------------------------
+COMPLETED WORK — FULLY VERIFIED
+--------------------------------------------------------
+
+1. ALERT MODEL REDESIGN (backend/database/models.py)
+   - Added `status` field (new / acknowledged / resolved)
+   - Added `handled_by` field ("agent" or "operator")
+   - Added `handled_at` field (datetime)
+   - Added `fingerprint` field (MD5 hash for deduplication)
+   - Added `alerts` relationship to Station model
+   - Added `station` back_populates to Alert model
+   STATUS: DONE ✅
+
+2. DEDUPLICATION LOGIC (backend/routes/data.py)
+   - _make_fingerprint() generates MD5 hash from station_id + fuel_type + alert_type
+   - _append_alert() checks for existing unresolved alert with same fingerprint
+   - If match found, new alert is skipped entirely
+   - Prevents alert spam during prolonged stockouts or price anomalies
+   STATUS: DONE ✅
+
+3. BACKGROUND WATCHER (backend/agent/watcher.py)
+   - Runs as asyncio background task, no external scheduler needed
+   - Polls alerts table every 30 seconds
+   - Filters strictly for status="new" AND severity="critical"
+   - Hands each alert off to the LLM responder
+   - Starts automatically on FastAPI app startup via lifespan hook
+   - VERIFIED IN LOGS: correctly finds and processes critical alerts
+   STATUS: DONE ✅
+
+4. LLM RESPONDER (backend/agent/responder.py)
+   - Sends alert context + system prompt to LLM
+   - System prompt instructs LLM to choose one of three actions:
+       * reorder        — stock critically low
+       * notify_manager — price anomaly or high consumption
+       * escalate       — critical situation needing human review
+   - Parses JSON response and routes to correct action handler
+   - On API auth failure (403/401): leaves alert as "new" so watcher retries
+   - On other failures: marks alert acknowledged by "system"
+   STATUS: DONE ✅ (LLM integration pending valid API key — see below)
+
+5. ACTION HANDLERS (backend/agent/actions.py)
+   - execute_action() routes to correct handler based on LLM decision
+   - reorder()         — logs reorder request, marks alert resolved
+   - notify_manager()  — logs manager notification, marks alert resolved
+   - escalate()        — logs escalation, marks alert acknowledged
+   - All actions update handled_by and handled_at fields in DB
+   STATUS: DONE ✅
+
+6. PATCH ENDPOINT (backend/routes/data.py)
+   - PATCH /alerts/{alert_id}
+   - Accepts: status (new / acknowledged / resolved), handled_by
+   - Allows Angular frontend operators to manually update alert status
+   - Returns updated alert object
+   - VERIFIED WORKING in logs
+   STATUS: DONE ✅
+
+7. STUDENT 4 TRIGGER ENDPOINT (backend/routes/data.py)
+   - POST /agent/trigger?alert_id={id}
+   - Accepts an alert ID from the orchestration agent (Student 4)
+   - Hands the alert directly to the LLM responder
+   - Clean integration point for cross-station alert handoff
+   STATUS: DONE ✅
+
+8. SCHEMAS UPDATED (backend/schemas.py)
+   - AlertResponse now includes: id, status, handled_by, handled_at, fingerprint
+   - New AlertUpdate schema added for PATCH endpoint validation
+   STATUS: DONE ✅
+
+9. GET /alerts FILTER UPDATED (backend/routes/data.py)
+   - Added `status` as an optional filter parameter
+   - Angular frontend can now query: /alerts?status=new&severity=critical
+   STATUS: DONE ✅
+
+--------------------------------------------------------
+PENDING — LLM API KEY ISSUE
+--------------------------------------------------------
+
+The watcher and responder are fully working and verified in logs:
+
+   [WATCHER] Polled — found 3 critical new alert(s)
+   [WATCHER] Handing off alert 1 (PRICE_ANOMALY) to responder...
+   INFO: Processing alert 1: PRICE_ANOMALY at BI00001
+
+The only remaining issue is obtaining a valid LLM API key.
+Three providers were attempted:
+
+   1. Grok (xAI)     — API key was accidentally exposed publicly and revoked
+   2. Gemini (Google) — Free tier quota exhausted (limit: 0 on all models)
+   3. OpenRouter      — 404 error, likely API key misconfiguration
+
+TO FIX (next person picks this up):
+   - Get a valid API key from any of:
+       * console.x.ai          (Grok)
+       * aistudio.google.com   (Gemini) — use a fresh Google account
+       * openrouter.ai         (OpenRouter — recommended, truly free tier)
+   - Add to .env file:
+       OPENROUTER_API_KEY=sk-or-xxxxxxxx
+       (or GROK_API_KEY / GEMINI_API_KEY depending on provider)
+   - Update model name in backend/agent/responder.py if needed
+   - Restart backend: uvicorn backend.main:app --reload
+   - Reset alert statuses to "new" via PATCH /alerts/{id}
+   - Watcher will process them within 30 seconds automatically
+
+--------------------------------------------------------
+API ENDPOINTS EXPOSED
+--------------------------------------------------------
+
+GET    /stations                — list all stations
+GET    /companies               — list all companies
+GET    /current?station_id=...  — latest fuel snapshot per fuel type
+GET    /history?station_id=...  — historical fuel readings with filters
+GET    /alerts                  — list alerts (filters: station_id, severity, alert_type, status)
+PATCH  /alerts/{alert_id}       — manual alert status update (for Angular frontend)
+POST   /agent/trigger           — trigger agent for specific alert (for Student 4)
+
+--------------------------------------------------------
+FILES MODIFIED / CREATED
+--------------------------------------------------------
+
+backend/database/models.py     — Alert model updated with new fields
+backend/schemas.py             — AlertResponse and AlertUpdate updated
+backend/routes/data.py         — deduplication, PATCH endpoint, trigger endpoint, status filter
+backend/agent/__init__.py      — package init file
+backend/agent/watcher.py       — background asyncio watcher
+backend/agent/responder.py     — LLM responder (OpenRouter/Grok/Gemini compatible)
+backend/agent/actions.py       — action handlers (reorder, notify_manager, escalate)
+backend/database/seed.py       — station seeding on startup
+
+--------------------------------------------------------
+HOW TO RUN
+--------------------------------------------------------
+
+Terminal 1 — Backend:
+   cd C:\Users\gamer\OneDrive\Desktop\PFA\pfa
+   .\.venv\Scripts\Activate.ps1
+   uvicorn backend.main:app --reload
+
+Terminal 2 — Station Agent (data generator):
+   cd C:\Users\gamer\OneDrive\Desktop\PFA\pfa
+   .\.venv\Scripts\Activate.ps1
+   python -m stations.agilAgentStation
+
+Terminal 3 — Frontend:
+   cd C:\Users\gamer\OneDrive\Desktop\PFA\pfa
+   .\.venv\Scripts\Activate.ps1
+   streamlit run frontend/app.py
+
+Backend URL:  http://127.0.0.1:8000
+API Docs:     http://127.0.0.1:8000/docs
+
+--------------------------------------------------------
+ALERT LIFECYCLE (as implemented)
+--------------------------------------------------------
+
+1. Station agent POSTs fuel data to /ingest every 5 seconds
+2. Alert rules run against each new record
+3. Fingerprint generated: MD5(station_id + fuel_type + alert_type)
+4. If unresolved alert with same fingerprint exists → SKIP (deduplication)
+5. Otherwise new alert saved with status="new"
+6. Watcher polls every 30s for status="new" + severity="critical"
+7. Responder sends alert context to LLM with system prompt
+8. LLM returns JSON action: reorder / notify_manager / escalate
+9. Action handler executes and marks alert as acknowledged/resolved
+10. Operators can also manually update status via PATCH /alerts/{id}
+
+========================================================
+END OF REPORT
+========================================================
