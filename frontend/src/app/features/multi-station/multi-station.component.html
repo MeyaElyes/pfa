@@ -1,0 +1,119 @@
+<section class="multi">
+  <header class="multi__header">
+    <div>
+      <h2>Fleet Overview</h2>
+      <p class="multi__subtitle">Monitoring {{ selectedIds.length }} station(s)</p>
+    </div>
+    <button type="button" class="btn btn--ghost" (click)="refresh()">Refresh</button>
+  </header>
+
+  <div class="multi__picker">
+    <span class="multi__picker-label">Stations:</span>
+    <label *ngFor="let station of stations" class="checkbox">
+      <input
+        type="checkbox"
+        [checked]="isSelected(station.station_id)"
+        (change)="toggleStation(station.station_id, $any($event.target).checked)">
+      <span>{{ station.station_id }} — {{ station.location }}</span>
+    </label>
+  </div>
+
+  <app-loading-spinner *ngIf="loading"></app-loading-spinner>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    tone="error"
+    title="Backend error"
+    [message]="error">
+  </app-empty-state>
+
+  <app-empty-state
+    *ngIf="!loading && !error && selectedIds.length === 0"
+    tone="info"
+    title="No stations selected"
+    message="Pick at least one station above to see fleet data.">
+  </app-empty-state>
+
+  <ng-container *ngIf="!loading && !error && summaries.length > 0">
+    <div class="multi__cards">
+      <article *ngFor="let summary of summaries" class="station-card">
+        <header class="station-card__head">
+          <h3>{{ summary.stationId }}</h3>
+          <app-status-badge [level]="summary.status" [label]="summary.statusLabel"></app-status-badge>
+        </header>
+        <p class="station-card__location" *ngIf="summary.location">{{ summary.location }}</p>
+        <app-progress-bar [value]="summary.utilization"></app-progress-bar>
+        <p class="station-card__metric">
+          {{ summary.totalStock | number:'1.0-0' }} /
+          {{ summary.totalCapacity | number:'1.0-0' }} L
+          ({{ summary.utilization | number:'1.1-1' }}%)
+        </p>
+        <p class="station-card__meta">{{ summary.rows.length }} fuel type(s)</p>
+      </article>
+    </div>
+
+    <h3 class="multi__section-title">Detailed Metrics</h3>
+    <div class="multi__table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Station</th>
+            <th>Fuel</th>
+            <th>Stock (L)</th>
+            <th>Capacity (L)</th>
+            <th>Util %</th>
+            <th>Price (TND)</th>
+            <th>Official (TND)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of flatRows">
+            <td>{{ row.station_id }}</td>
+            <td>{{ row.fuel_type }}</td>
+            <td>{{ row.stock_liters | number:'1.0-0' }}</td>
+            <td>{{ row.capacity_liters | number:'1.0-0' }}</td>
+            <td>{{ row.utilization | number:'1.1-1' }}</td>
+            <td>{{ row.price_tnd | number:'1.3-3' }}</td>
+            <td>{{ row.official_price_tnd | number:'1.3-3' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="multi__section-title">Global Alerts</h3>
+    <app-empty-state
+      *ngIf="alerts.length === 0"
+      tone="success"
+      title="No alerts"
+      message="No alerts recorded for the selected stations.">
+    </app-empty-state>
+
+    <div *ngIf="alerts.length > 0" class="multi__table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Station</th>
+            <th>Fuel</th>
+            <th>Type</th>
+            <th>Severity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let alert of alerts">
+            <td>{{ alert.timestamp }}</td>
+            <td>{{ alert.station_id }}</td>
+            <td>{{ alert.fuel_type }}</td>
+            <td>{{ alert.alert_type }}</td>
+            <td>
+              <app-status-badge
+                [level]="alert.severity | severityTone"
+                [label]="alert.severity">
+              </app-status-badge>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</section>

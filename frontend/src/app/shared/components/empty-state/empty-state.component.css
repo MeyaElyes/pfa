@@ -1,0 +1,20 @@
+.empty {
+  padding: 18px 20px;
+  border-radius: 12px;
+  margin: 12px 0;
+}
+
+.empty__title {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.empty__message {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.empty--info    { background: #e3eefd; color: #0a4d8a; }
+.empty--warn    { background: #fff4db; color: #7a5d00; }
+.empty--success { background: #e5f6ec; color: #1d6f42; }
+.empty--error   { background: #ffe1e6; color: #7c1d1d; }

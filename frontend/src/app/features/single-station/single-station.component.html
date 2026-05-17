@@ -1,0 +1,19 @@
+<nav class="tabs" role="tablist">
+  <button
+    *ngFor="let tab of tabs"
+    type="button"
+    role="tab"
+    [class.active]="activeTab === tab.id"
+    [attr.aria-selected]="activeTab === tab.id"
+    (click)="selectTab(tab.id)">
+    {{ tab.label }}
+  </button>
+</nav>
+
+<div class="tab-panel" role="tabpanel">
+  <app-overview-tab *ngIf="activeTab === 'overview'"></app-overview-tab>
+  <app-history-tab  *ngIf="activeTab === 'history'"></app-history-tab>
+  <app-alerts-tab   *ngIf="activeTab === 'alerts'"></app-alerts-tab>
+  <app-forecast-tab *ngIf="activeTab === 'forecast'"></app-forecast-tab>
+  <app-chat-tab     *ngIf="activeTab === 'chat'"></app-chat-tab>
+</div>

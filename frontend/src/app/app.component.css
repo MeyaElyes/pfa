@@ -1,0 +1,141 @@
+.shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  gap: 0;
+}
+
+.shell__sidebar {
+  background: #0e2235;
+  color: #f4f7fb;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.shell__brand {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: 0.04em;
+}
+
+.shell__brand-sub {
+  margin: -8px 0 8px;
+  font-size: 0.8rem;
+  color: #97aac0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.shell__view-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shell__view-toggle button {
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #c8d3e0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.shell__view-toggle button.active {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.shell__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shell__field label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #97aac0;
+}
+
+.shell__field select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #2a3e57;
+  background: #1a3148;
+  color: #f4f7fb;
+}
+
+.shell__refresh {
+  margin-top: auto;
+}
+
+.shell__main {
+  padding: 24px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.shell__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.shell__header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.shell__caption {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.shell__status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.shell__updated {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .shell__sidebar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 14px 18px;
+    gap: 12px;
+  }
+
+  .shell__brand-sub {
+    margin: 0;
+  }
+
+  .shell__view-toggle {
+    flex-direction: row;
+  }
+
+  .shell__refresh {
+    margin-left: auto;
+  }
+}

@@ -1,0 +1,61 @@
+<section class="history">
+  <header class="history__header">
+    <h2>Historical Performance</h2>
+    <div class="history__controls">
+      <label>
+        Fuel type
+        <select [ngModel]="fuelType" (ngModelChange)="onFuelTypeChange($event)">
+          <option *ngFor="let f of fuelTypes" [value]="f">{{ f }}</option>
+        </select>
+      </label>
+      <button type="button" class="btn btn--ghost" (click)="reload()">Refresh</button>
+    </div>
+  </header>
+
+  <app-loading-spinner *ngIf="loading"></app-loading-spinner>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    tone="error"
+    title="Backend error"
+    [message]="error">
+  </app-empty-state>
+
+  <ng-container *ngIf="!loading && !error">
+    <div *ngIf="recordCount > 0" class="history__summary">
+      <app-stat-card label="Records" [value]="recordCount"></app-stat-card>
+      <app-stat-card label="Min stock" [value]="(minStock | number:'1.0-0') + ' L'"></app-stat-card>
+      <app-stat-card label="Max stock" [value]="(maxStock | number:'1.0-0') + ' L'"></app-stat-card>
+    </div>
+
+    <div *ngIf="rows.length > 0" class="history__table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Stock (L)</th>
+            <th>Capacity (L)</th>
+            <th>Price (TND)</th>
+            <th>Sales / 5 min (L)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows">
+            <td>{{ row.timestamp }}</td>
+            <td>{{ row.stock_liters | number:'1.0-0' }}</td>
+            <td>{{ row.capacity_liters | number:'1.0-0' }}</td>
+            <td>{{ row.price_tnd | number:'1.3-3' }}</td>
+            <td>{{ row.sales_last_5min_liters | number:'1.0-0' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <app-empty-state
+      *ngIf="rows.length === 0"
+      tone="info"
+      title="No history"
+      message="No historical records found for this fuel type.">
+    </app-empty-state>
+  </ng-container>
+</section>

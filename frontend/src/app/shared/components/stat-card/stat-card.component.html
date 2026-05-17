@@ -1,0 +1,5 @@
+<div class="stat">
+  <div class="stat__label">{{ label }}</div>
+  <div class="stat__value">{{ value }}</div>
+  <div *ngIf="delta" class="stat__delta stat__delta--{{ deltaTone }}">{{ delta }}</div>
+</div>

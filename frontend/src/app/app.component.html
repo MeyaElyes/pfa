@@ -1,0 +1,68 @@
+<div class="shell">
+  <aside class="shell__sidebar">
+    <h2 class="shell__brand">⛽ AGIL</h2>
+    <p class="shell__brand-sub">Fuel Monitor Pro</p>
+
+    <nav class="shell__view-toggle" aria-label="View mode">
+      <button
+        type="button"
+        [class.active]="viewMode === 'single'"
+        (click)="switchView('single')">
+        Single station
+      </button>
+      <button
+        type="button"
+        [class.active]="viewMode === 'multi'"
+        (click)="switchView('multi')">
+        Fleet view
+      </button>
+    </nav>
+
+    <div *ngIf="viewMode === 'single'" class="shell__field">
+      <label for="station-select">Station</label>
+      <select
+        id="station-select"
+        [ngModel]="selectedStation"
+        (ngModelChange)="onStationChange($event)">
+        <option *ngFor="let s of stations" [value]="s.station_id">
+          {{ s.station_id }} — {{ s.location }}
+        </option>
+      </select>
+    </div>
+
+    <button type="button" class="btn btn--primary shell__refresh" (click)="refresh()">
+      Refresh
+    </button>
+  </aside>
+
+  <main class="shell__main">
+    <header class="shell__header">
+      <div>
+        <h1>{{ title }}</h1>
+        <p class="shell__caption" *ngIf="viewMode === 'single'">
+          Single Station Monitoring · Terminal {{ selectedStation }}
+        </p>
+        <p class="shell__caption" *ngIf="viewMode === 'multi'">
+          Multi-station overview
+        </p>
+      </div>
+
+      <div class="shell__status">
+        <app-status-badge
+          [level]="backendConnected ? 'ok' : 'critical'"
+          [label]="backendConnected ? 'Online' : 'Offline'">
+        </app-status-badge>
+        <span class="shell__updated">Updated: {{ now | date:'HH:mm:ss' }}</span>
+      </div>
+    </header>
+
+    <app-empty-state
+      *ngIf="!backendConnected"
+      tone="error"
+      title="Backend offline"
+      [message]="errorMessage || 'Verify the API server is running.'">
+    </app-empty-state>
+
+    <router-outlet></router-outlet>
+  </main>
+</div>
