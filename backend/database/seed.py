@@ -1,3 +1,6 @@
+#I USED THIS TO FILL THE DATABASE YOU CAN REMOVE IT IF U HAVE INITATED DATABASE  
+
+
 from backend.database.database import SessionLocal, engine
 from backend.database import models
 from datetime import datetime, timezone

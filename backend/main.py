@@ -1,10 +1,9 @@
-from contextlib import asynccontextmanager
-
 from dotenv import load_dotenv
+load_dotenv(dotenv_path=r"C:\Users\gamer\OneDrive\Desktop\PFA\pfa\.env", override=True)
+
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-load_dotenv(override=True)
 
 from backend.database.database import engine
 from backend.routes import data, ingest
