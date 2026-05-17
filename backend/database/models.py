@@ -36,7 +36,7 @@ class Alert(Base):
     __tablename__ = "alerts"
     
     id = Column(Integer, primary_key=True, index=True) 
-    timestamp = Column(DateTime, server_default=func.now())
+    timestamp = Column(DateTime, default=func.now())
     station_id = Column(String, ForeignKey("stations.station_id")) 
     fuel_type = Column(String) 
     alert_type = Column(String)
