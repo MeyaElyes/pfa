@@ -2,20 +2,21 @@ import json
 import logging
 import os
 from datetime import datetime
-import requests
+import httpx
 from sqlalchemy.orm import Session
 from backend.agent.actions import execute_action
 from backend.database import models
 
 logger = logging.getLogger(__name__)
+print(f"[DEBUG] GEMINI_API_KEY loaded: {os.getenv('GEMINI_API_KEY')}")  # ADD THIS
 
 async def process_alert(alert: models.Alert, db: Session):
     logger.info(f"Processing alert {alert.id}: {alert.alert_type} at {alert.station_id}")
 
     try:
-        api_key = os.getenv("OPENROUTER_API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
-            raise ValueError("OPENROUTER_API_KEY not set in .env")
+            raise ValueError("GEMINI_API_KEY not set in .env")
 
         context = {
             "alert_id": alert.id,
@@ -27,7 +28,16 @@ async def process_alert(alert: models.Alert, db: Session):
             "timestamp": alert.timestamp.isoformat() if alert.timestamp else None,
         }
 
-        prompt = f"""Alert Context:
+        payload = {
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [{"text": f"""You are an autonomous fuel station monitoring agent.
+Choose exactly one action: reorder, notify_manager, or escalate.
+Respond ONLY with valid JSON: {{"action": "...", "reason": "..."}}
+No extra text outside the JSON.
+
+Alert Context:
 {json.dumps(context, indent=2)}
 
 Choose ONE action:
@@ -35,35 +45,28 @@ Choose ONE action:
 2. "notify_manager" — price anomaly or high consumption  
 3. "escalate" — critical situation needing human intervention
 
-Respond with ONLY JSON: {{"action": "...", "reason": "..."}}"""
-
-        response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "mistralai/mistral-7b-instruct",
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": """You are an autonomous fuel station monitoring agent.
-Choose exactly one action: reorder, notify_manager, or escalate.
-Respond ONLY with valid JSON: {"action": "...", "reason": "..."}
-No extra text outside the JSON."""
-                    },
-                    {"role": "user", "content": prompt}
-                ],
-                "max_tokens": 256,
+Respond with ONLY JSON: {{"action": "...", "reason": "..."}}"""}]
+                }
+            ],
+            "generationConfig": {
                 "temperature": 0.2,
-            },
-            timeout=30,
-        )
-        response.raise_for_status()
+                "maxOutputTokens": 256,
+                "responseMimeType": "application/json"
+            }
+        }
+
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={api_key}",
+                headers={"Content-Type": "application/json"},
+                json=payload,
+            )
+            if response.status_code != 200:
+                logger.error(f"Gemini error body: {response.text}")
+            response.raise_for_status()
 
         response_data = response.json()
-        response_text = response_data["choices"][0]["message"]["content"].strip()
+        response_text = response_data["candidates"][0]["content"]["parts"][0]["text"].strip()
         logger.info(f"LLM response: {response_text}")
 
         try:

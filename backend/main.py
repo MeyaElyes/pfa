@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-load_dotenv()
+load_dotenv(override=True)
 
 from backend.database.database import engine
 from backend.routes import data, ingest
