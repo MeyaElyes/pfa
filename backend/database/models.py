@@ -42,3 +42,23 @@ class Alert(Base):
     alert_type = Column(String)
     severity = Column(String)
     message = Column(String) 
+    
+    # Alert handling/tracking
+    status = Column(String, default="new")  # new, processing, acknowledged
+    handled_by = Column(String, nullable=True)  # agent, system, manual
+    handled_at = Column(DateTime, nullable=True)
+
+
+# 4. Incident Log: records each action taken by the responder/actions system
+class IncidentLog(Base):
+    __tablename__ = "incident_log"
+
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime, server_default=func.now())
+    alert_id = Column(Integer, ForeignKey("alerts.id"), nullable=True)
+    action = Column(String)
+    reason = Column(String)
+    payload = Column(String, nullable=True)
+    actor = Column(String, nullable=True)  # who executed the action (agent/system/manual)
+
+    # relationship not strictly required; simple FK is sufficient for auditing

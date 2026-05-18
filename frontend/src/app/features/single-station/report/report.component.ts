@@ -14,6 +14,7 @@ export class ReportComponent implements OnInit, OnDestroy {
   isLoading = false;
   error: string | null = null;
   generated = false;
+  selectedFuel = 'Gasoil50';
 
   private readonly destroy$ = new Subject<void>();
 
@@ -39,7 +40,7 @@ export class ReportComponent implements OnInit, OnDestroy {
     this.error = null;
     this.generated = false;
 
-    this.reportService.getReport(this.stationId).subscribe({
+    this.reportService.getReport(this.stationId, this.selectedFuel).subscribe({
       next: (data) => {
         this.reportMarkdown = data.report;
         this.isLoading = false;
@@ -53,7 +54,7 @@ export class ReportComponent implements OnInit, OnDestroy {
   }
 
   downloadPdf(): void {
-    const url = this.reportService.getReportPdfUrl(this.stationId);
+    const url = this.reportService.getReportPdfUrl(this.stationId, this.selectedFuel);
     window.open(url, '_blank');
   }
 

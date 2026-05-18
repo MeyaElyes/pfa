@@ -178,6 +178,7 @@ def get_alerts(
     station_id: Optional[str] = Query(None),
     severity: Optional[Literal["warning", "critical"]] = Query(None),
     alert_type: Optional[Literal["LOW_STOCK", "PRICE_ANOMALY", "HIGH_CONSUMPTION", "STATION_CRITICAL"]] = Query(None),
+    status: Optional[Literal["new", "processing", "acknowledged"]] = Query(None),
     limit: int = Query(50, le=500),
     db: Session = Depends(get_db),
 ):
@@ -188,6 +189,8 @@ def get_alerts(
         query = query.filter(models.Alert.severity == severity)
     if alert_type:
         query = query.filter(models.Alert.alert_type == alert_type)
+    if status:
+        query = query.filter(models.Alert.status == status)
     results = query.order_by(models.Alert.timestamp.desc()).limit(limit).all()
     return results
 

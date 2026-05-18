@@ -32,9 +32,13 @@ class FuelDataResponse(BaseModel):
 class AlertResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    id: int
     timestamp: datetime
     station_id: str
     fuel_type: str
     alert_type: str
     severity: str
     message: str
+    status: str  # new, processing, acknowledged
+    handled_by: Optional[str] = None  # agent, system, manual
+    handled_at: Optional[datetime] = None

@@ -11,11 +11,11 @@ export interface ReportResponse {
 export class ReportService {
   constructor(private readonly api: ApiService) {}
 
-  getReport(stationId: string): Observable<ReportResponse> {
-    return this.api.get<ReportResponse>('/report', { station_id: stationId });
+  getReport(stationId: string, fuelType: string): Observable<ReportResponse> {
+    return this.api.get<ReportResponse>('/report', { station_id: stationId, fuel_type: fuelType });
   }
 
-  getReportPdfUrl(stationId: string): string {
-    return `http://localhost:8000/report/pdf?station_id=${stationId}`;
+  getReportPdfUrl(stationId: string, fuelType: string): string {
+    return `http://localhost:8000/report/pdf?station_id=${stationId}&fuel_type=${encodeURIComponent(fuelType)}`;
   }
 }

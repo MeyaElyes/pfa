@@ -5,10 +5,19 @@
   </div>
 
   <div class="report-actions">
-    <button class="btn-generate" (click)="generateReport()" [disabled]="isLoading">
+    <label class="fuel-select">
+      <span>Fuel:</span>
+      <select [(ngModel)]="selectedFuel" [disabled]="!stationId || isLoading">
+        <option value="Gasoil50">Gasoil50</option>
+        <option value="SansPlomb">SansPlomb</option>
+      </select>
+    </label>
+
+    <button class="btn-generate" (click)="generateReport()" [disabled]="isLoading || !stationId" [title]="!stationId ? 'Select a station first' : ''">
       <span *ngIf="!isLoading">🤖 Generate Report</span>
       <span *ngIf="isLoading">⏳ Generating...</span>
     </button>
+    <div *ngIf="!stationId" class="hint">Select a station to enable report generation.</div>
 
     <ng-container *ngIf="generated">
       <button class="btn-download-md" (click)="downloadMarkdown()">
