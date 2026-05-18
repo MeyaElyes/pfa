@@ -11,9 +11,10 @@
 </nav>
 
 <div class="tab-panel" role="tabpanel">
-  <app-overview-tab *ngIf="activeTab === 'overview'"></app-overview-tab>
-  <app-history-tab  *ngIf="activeTab === 'history'"></app-history-tab>
-  <app-alerts-tab   *ngIf="activeTab === 'alerts'"></app-alerts-tab>
-  <app-forecast-tab *ngIf="activeTab === 'forecast'"></app-forecast-tab>
-  <app-chat-tab     *ngIf="activeTab === 'chat'"></app-chat-tab>
+  <app-overview-tab  *ngIf="activeTab === 'overview'"></app-overview-tab>
+  <app-history-tab   *ngIf="activeTab === 'history'"></app-history-tab>
+  <app-alerts-tab    *ngIf="activeTab === 'alerts'"></app-alerts-tab>
+  <app-forecast-tab  *ngIf="activeTab === 'forecast'"></app-forecast-tab>
+  <app-chat-tab      *ngIf="activeTab === 'chat'"></app-chat-tab>
+  <app-report-tab    *ngIf="activeTab === 'report'"></app-report-tab>
 </div>

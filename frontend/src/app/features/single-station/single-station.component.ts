@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-type Tab = 'overview' | 'history' | 'alerts' | 'forecast' | 'chat';
+type Tab = 'overview' | 'history' | 'alerts' | 'forecast' | 'chat' | 'report';
 
 interface TabDef {
   id: Tab;
@@ -18,7 +18,8 @@ export class SingleStationComponent {
     { id: 'history',  label: 'Analytics & Trends' },
     { id: 'alerts',   label: 'Incident Log' },
     { id: 'forecast', label: 'AI Forecast' },
-    { id: 'chat',     label: 'Station Chat' }
+    { id: 'chat',     label: 'Station Chat' },
+    { id: 'report',   label: '📋 AI Report' }
   ];
 
   activeTab: Tab = 'overview';

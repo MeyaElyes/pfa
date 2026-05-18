@@ -8,6 +8,8 @@ import { HistoryComponent } from './history/history.component';
 import { OverviewComponent } from './overview/overview.component';
 import { SingleStationRoutingModule } from './single-station-routing.module';
 import { SingleStationComponent } from './single-station.component';
+import { ReportComponent } from './report/report.component';
+import { MarkdownModule } from 'ngx-markdown';
 
 @NgModule({
   declarations: [
@@ -16,8 +18,9 @@ import { SingleStationComponent } from './single-station.component';
     HistoryComponent,
     AlertsComponent,
     ForecastComponent,
-    ChatComponent
+    ChatComponent,
+    ReportComponent
   ],
-  imports: [SharedModule, SingleStationRoutingModule]
+  imports: [SharedModule, SingleStationRoutingModule, MarkdownModule.forChild()]
 })
 export class SingleStationModule {}

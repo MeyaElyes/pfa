@@ -1,80 +1,70 @@
+import os
 import pandas as pd
 from prophet import Prophet
 from sqlalchemy.orm import Session
-from ..database.models import FuelData # Ensure this import matches your structure
+from dotenv import load_dotenv
+from ..database.models import FuelData
+from sqlalchemy import text
+from groq import Groq
 
-# def get_prophet_prediction(db: Session, station_id: str, fuel_type: str, periods: int = 1):
-#     """
-#     Directly queries SQLite via SQLAlchemy, trains Prophet, and predicts future stock.
-#     periods=24 at 5-min intervals = 2 hours into the future.
-#     """
-#     # 1. Direct SQLAlchemy Query (Fastest method)
-#     query = db.query(FuelData.timestamp, FuelData.stock_liters)\
-#               .filter(FuelData.station_id == station_id)\
-#               .filter(FuelData.fuel_type == fuel_type)
-    
-#     # Load directly into Pandas
-#     df = pd.read_sql(query.statement, db.bind)
-    
-#     # Handle empty/insufficient data gracefully
-#     if len(df) < 0:
-#         return []
 
-#     # 2. Format for Prophet
-#     df.rename(columns={'timestamp': 'ds', 'stock_liters': 'y'}, inplace=True)
-#     df['ds'] = pd.to_datetime(df['ds']).dt.tz_localize(None) # Strip timezones for Prophet
+load_dotenv()
+
+
+
+def get_narrative(forecast_records, station_id, fuel_type, recent_sales_trend):
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     
-#     # 3. Train the Model
-#     model = Prophet(daily_seasonality=True, yearly_seasonality=False)
-#     model.fit(df)
+    first = forecast_records[0]
+    last = forecast_records[-1]
+    min_stock = min(r['yhat'] for r in forecast_records)
     
-#     # 4. Predict
-#     future = model.make_future_dataframe(periods=periods, freq='5min')
-#     forecast = model.predict(future)
-    
-#     # 5. Extract only the future predictions (tail) to keep the API payload tiny
-#     future_forecast = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail(periods)
-    
-#     # Convert timestamps to strings so FastAPI can serialize them to JSON
-#     future_forecast['ds'] = future_forecast['ds'].dt.strftime('%Y-%m-%d %H:%M:%S')
-    
-#     # Return as a list of dictionaries
-#     return future_forecast.to_dict(orient='records')
+    prompt = f"""You are a fuel inventory analyst. Write a 2-3 sentence professional summary.
+Station: {station_id}, Fuel: {fuel_type}
+Stock goes from {first['yhat']:.0f}L to {last['yhat']:.0f}L
+Minimum predicted: {min_stock:.0f}L
+Avg sales: {recent_sales_trend:.1f}L per 5min
+Focus on depletion risk and recommended action."""
+
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",  
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.choices[0].message.content
 
 def get_prophet_prediction(db: Session, station_id: str, fuel_type: str, periods: int = 10):
-    query = db.query(FuelData.timestamp, FuelData.stock_liters)\
+    query = db.query(FuelData.timestamp, FuelData.stock_liters, FuelData.sales_last_5min_liters)\
               .filter(FuelData.station_id == station_id)\
               .filter(FuelData.fuel_type == fuel_type)\
-              .order_by(FuelData.timestamp.asc()) # Ensure chronological order
-    
-    df = pd.read_sql(query.statement, db.bind)
+              .order_by(FuelData.timestamp.asc())
+    records = db.execute(query.statement).fetchall()
+    df = pd.DataFrame(records, columns=['timestamp', 'stock_liters', 'sales_last_5min_liters'])
+
     
     if len(df) < 50:
-        return []
+        return {"forecast": [], "narrative": "Not enough data to generate forecast."}
+
+    recent_sales_trend = df['sales_last_5min_liters'].tail(12).mean()
 
     df.rename(columns={'stock_liters': 'y'}, inplace=True)
 
-    # --- THE TIME WARP FIX ---
-    # Prophet needs to see 5-minute intervals to understand your daily seasonality.
-    # We generate a fake timeline ending at the current real-world time, 
-    # stepping backwards by 5 minutes for exactly the number of rows we have.
-    
     latest_real_time = pd.Timestamp.now().replace(microsecond=0)
     simulated_timeline = pd.date_range(end=latest_real_time, periods=len(df), freq='5min')
-    
-    # Overwrite the real 5-second DB timestamps with our simulated 5-minute timeline
     df['ds'] = simulated_timeline
-    # -------------------------
 
-    # Train the Model
     model = Prophet(daily_seasonality=True, yearly_seasonality=False)
     model.fit(df)
     
-    # Predict the next 24 periods (24 * 5 mins = 2 hours)
     future = model.make_future_dataframe(periods=periods, freq='5min')
     forecast = model.predict(future)
     
     future_forecast = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail(periods)
     future_forecast['ds'] = future_forecast['ds'].dt.strftime('%Y-%m-%d %H:%M:%S')
-    
-    return future_forecast.to_dict(orient='records')
+    records = future_forecast.to_dict(orient='records')
+
+    try:
+        narrative = get_narrative(records, station_id, fuel_type, recent_sales_trend)
+    except Exception as e:
+        narrative = f"Narrative unavailable: {e}"
+
+    return {"forecast": records, "narrative": narrative}
