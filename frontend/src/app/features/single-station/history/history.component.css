@@ -1,0 +1,40 @@
+.history__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.history__header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.history__controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.history__controls label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.history__table-wrap {
+  max-height: 480px;
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid #e5e9ef;
+}

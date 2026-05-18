@@ -1,0 +1,66 @@
+<section class="overview">
+  <header class="overview__header">
+    <h2>Current Inventory &amp; Pricing</h2>
+    <button type="button" class="btn btn--ghost" (click)="refresh()">Refresh</button>
+  </header>
+
+  <app-loading-spinner *ngIf="loading"></app-loading-spinner>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    tone="error"
+    title="Backend error"
+    [message]="error">
+  </app-empty-state>
+
+  <app-empty-state
+    *ngIf="!loading && !error && rows.length === 0"
+    tone="warn"
+    title="No data"
+    message="No current data available for this station.">
+  </app-empty-state>
+
+  <div *ngIf="!loading && rows.length > 0" class="overview__grid">
+    <article *ngFor="let row of rows" class="fuel-card">
+      <div class="fuel-card__head">
+        <h3>{{ row.fuel_type }}</h3>
+        <app-status-badge
+          [level]="row.stockLevel"
+          [label]="row.stockLevel === 'ok' ? 'Healthy' : row.stockLevel === 'warn' ? 'Low' : 'Critical'">
+        </app-status-badge>
+      </div>
+
+      <app-progress-bar [value]="row.utilization"></app-progress-bar>
+      <p class="fuel-card__util">{{ row.utilization | number:'1.1-1' }}% of capacity</p>
+
+      <div class="fuel-card__stats">
+        <app-stat-card
+          label="Stock"
+          [value]="(row.stock_liters | number:'1.0-0') + ' L'">
+        </app-stat-card>
+        <app-stat-card
+          label="Price (TND)"
+          [value]="row.price_tnd | number:'1.3-3'"
+          [delta]="(row.priceDeviation >= 0 ? '+' : '') + (row.priceDeviation | number:'1.3-3')"
+          [deltaTone]="row.priceCompliant ? 'neutral' : row.priceDeviation > 0 ? 'negative' : 'positive'">
+        </app-stat-card>
+      </div>
+
+      <details class="fuel-card__details">
+        <summary>Details</summary>
+        <dl>
+          <dt>Capacity</dt>
+          <dd>{{ row.capacity_liters | number:'1.0-0' }} L</dd>
+          <dt>Sales / 5 min</dt>
+          <dd>{{ row.sales_last_5min_liters | number:'1.0-0' }} L</dd>
+          <dt>Est. daily sales</dt>
+          <dd>{{ row.dailySalesEstimate | number:'1.0-0' }} L</dd>
+          <dt>Official price</dt>
+          <dd>{{ row.official_price_tnd | number:'1.3-3' }} TND</dd>
+          <dt>Price compliance</dt>
+          <dd>{{ row.priceCompliant ? 'Compliant' : 'Anomalous' }}</dd>
+        </dl>
+      </details>
+    </article>
+  </div>
+</section>

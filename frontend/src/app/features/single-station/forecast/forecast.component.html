@@ -1,0 +1,71 @@
+<section class="forecast">
+  <header class="forecast__header">
+    <h2>AI Forecast (Prophet)</h2>
+  </header>
+
+  <form class="forecast__controls" (submit)="$event.preventDefault(); generate()">
+    <label>
+      Station
+      <select [(ngModel)]="stationId" name="station">
+        <option *ngFor="let station of stations" [value]="station.station_id">
+          {{ station.station_id }} — {{ station.location }}
+        </option>
+      </select>
+    </label>
+
+    <label>
+      Fuel type
+      <select [(ngModel)]="fuelType" name="fuelType">
+        <option *ngFor="let f of fuelTypes" [value]="f">{{ f }}</option>
+      </select>
+    </label>
+
+    <label>
+      Horizon
+      <select [(ngModel)]="periods" name="horizon">
+        <option *ngFor="let h of horizons" [ngValue]="h.value">{{ h.label }}</option>
+      </select>
+    </label>
+
+    <button type="submit" class="btn btn--primary" [disabled]="loading">
+      {{ loading ? 'Generating…' : 'Generate forecast' }}
+    </button>
+  </form>
+
+  <app-loading-spinner *ngIf="loading" message="Training Prophet model on the backend…"></app-loading-spinner>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    tone="error"
+    title="Forecast failed"
+    [message]="error">
+  </app-empty-state>
+
+  <app-empty-state
+    *ngIf="!loading && !error && rows.length === 0"
+    tone="info"
+    title="No forecast yet"
+    message="Pick a station and click Generate forecast to build a stock depletion prediction.">
+  </app-empty-state>
+
+  <div *ngIf="!loading && rows.length > 0" class="forecast__table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Predicted stock</th>
+          <th>Lower bound</th>
+          <th>Upper bound</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of rows">
+          <td>{{ row.ds }}</td>
+          <td>{{ row.yhat | number:'1.0-0' }}</td>
+          <td>{{ row.yhat_lower | number:'1.0-0' }}</td>
+          <td>{{ row.yhat_upper | number:'1.0-0' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

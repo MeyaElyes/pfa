@@ -1,0 +1,99 @@
+.multi__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.multi__header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.multi__subtitle {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.multi__picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f5f7fa;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.multi__picker-label {
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.multi__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.station-card {
+  padding: 16px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e5e9ef;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.station-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.station-card__head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.station-card__location {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.station-card__metric {
+  margin: 0;
+  font-weight: 600;
+}
+
+.station-card__meta {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.multi__section-title {
+  margin: 24px 0 12px;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.multi__table-wrap {
+  max-height: 420px;
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid #e5e9ef;
+}

@@ -1,0 +1,35 @@
+<div class="report-container">
+  <div class="report-header">
+    <h2>📋 AI-Generated Station Report</h2>
+    <p class="subtitle">Powered by Llama 3.3 70B — assembles stock, alerts & forecast</p>
+  </div>
+
+  <div class="report-actions">
+    <button class="btn-generate" (click)="generateReport()" [disabled]="isLoading">
+      <span *ngIf="!isLoading">🤖 Generate Report</span>
+      <span *ngIf="isLoading">⏳ Generating...</span>
+    </button>
+
+    <ng-container *ngIf="generated">
+      <button class="btn-download-md" (click)="downloadMarkdown()">
+        ⬇️ Download .md
+      </button>
+      <button class="btn-download-pdf" (click)="downloadPdf()">
+        📄 Download PDF
+      </button>
+    </ng-container>
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Generating report, please wait...</p>
+  </div>
+
+  <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+  <div *ngIf="generated && !isLoading" class="report-content">
+    <div class="report-content">
+        <markdown [data]="reportMarkdown"></markdown>
+    </div>
+  </div>
+</div>

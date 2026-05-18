@@ -1,0 +1,83 @@
+:root {
+  --color-bg: #f4f7fb;
+  --color-surface: #ffffff;
+  --color-text: #1a2732;
+  --color-primary: #0057b7;
+  --color-accent: #ff9f1c;
+  --color-muted: #6d7a86;
+  --color-ok: #2e9e5b;
+  --color-warn: #d9a300;
+  --color-critical: #d83a3a;
+  --color-info: #1d6fbf;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+}
+
+button, select, input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 500;
+  transition: filter 120ms ease;
+}
+
+.btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.btn--primary:hover { filter: brightness(0.95); }
+.btn--primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn--ghost {
+  background: #fff;
+  border-color: #d2d9e3;
+  color: var(--color-text);
+}
+
+.btn--ghost:hover { background: #f5f7fa; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.data-table thead {
+  background: #f5f7fa;
+  position: sticky;
+  top: 0;
+}
+
+.data-table th,
+.data-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #eef1f5;
+  font-size: 0.9rem;
+}
+
+.data-table tbody tr:hover {
+  background: #fafbfd;
+}

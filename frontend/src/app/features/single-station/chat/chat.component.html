@@ -1,0 +1,40 @@
+<section class="chat-shell">
+  <div class="chat-header">
+    <div>
+      <h2>Station Chat</h2>
+      <p>Ask about current fuel status, alerts, or recent events for the selected station.</p>
+    </div>
+  </div>
+
+  <div class="chat-window">
+    <div class="message" *ngFor="let message of messages" [ngClass]="message.role">
+      <div class="message-role">{{ message.role === 'assistant' ? 'Agent' : 'You' }}</div>
+      <div class="message-content">{{ message.content }}</div>
+    </div>
+
+    <div class="empty-state" *ngIf="messages.length === 0">
+      Start the conversation by typing a question below.
+    </div>
+  </div>
+
+  <form class="chat-input" (ngSubmit)="sendMessage()">
+    <textarea
+      [(ngModel)]="userInput"
+      name="message"
+      rows="4"
+      placeholder="Type your question here..."
+      [disabled]="isLoading"
+    ></textarea>
+
+    <button type="submit" [disabled]="isLoading || !userInput.trim()">
+      {{ isLoading ? 'Sending…' : 'Send' }}
+    </button>
+  </form>
+
+  <div class="chat-sources" *ngIf="sourcesUsed.length > 0">
+    <strong>Sources used:</strong>
+    <span *ngFor="let source of sourcesUsed; let i = index">
+      {{ source }}<span *ngIf="i < sourcesUsed.length - 1">, </span>
+    </span>
+  </div>
+</section>

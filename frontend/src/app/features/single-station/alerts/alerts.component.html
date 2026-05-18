@@ -1,0 +1,50 @@
+<section class="alerts">
+  <header class="alerts__header">
+    <h2>System Alerts</h2>
+    <button type="button" class="btn btn--ghost" (click)="refresh()">Refresh</button>
+  </header>
+
+  <app-loading-spinner *ngIf="loading"></app-loading-spinner>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    tone="error"
+    title="Backend error"
+    [message]="error">
+  </app-empty-state>
+
+  <app-empty-state
+    *ngIf="!loading && !error && alerts.length === 0"
+    tone="success"
+    title="All clear"
+    message="No alerts recorded for this station.">
+  </app-empty-state>
+
+  <div *ngIf="!loading && alerts.length > 0" class="alerts__table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Fuel</th>
+          <th>Type</th>
+          <th>Severity</th>
+          <th>Message</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let alert of alerts">
+          <td>{{ alert.timestamp }}</td>
+          <td>{{ alert.fuel_type }}</td>
+          <td>{{ alert.alert_type }}</td>
+          <td>
+            <app-status-badge
+              [level]="alert.severity | severityTone"
+              [label]="alert.severity">
+            </app-status-badge>
+          </td>
+          <td>{{ alert.message }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

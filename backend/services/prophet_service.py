@@ -6,20 +6,34 @@ from dotenv import load_dotenv
 from google import genai
 from ..database.models import FuelData
 from sqlalchemy import text
+from ..database.models import FuelData
+from sqlalchemy import text
+from groq import Groq
 
 
 load_dotenv()
 
+
+
 def get_narrative(forecast_records, station_id, fuel_type, recent_sales_trend):
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    
     first = forecast_records[0]
     last = forecast_records[-1]
     min_stock = min(r['yhat'] for r in forecast_records)
-    return (
-        f"Stock for {fuel_type} at {station_id} is projected to go from "
-        f"{first['yhat']:.0f}L to {last['yhat']:.0f}L. "
-        f"Minimum predicted: {min_stock:.0f}L. "
-        f"Avg sales rate: {recent_sales_trend:.1f}L per 5min."
+    
+    prompt = f"""You are a fuel inventory analyst. Write a 2-3 sentence professional summary.
+Station: {station_id}, Fuel: {fuel_type}
+Stock goes from {first['yhat']:.0f}L to {last['yhat']:.0f}L
+Minimum predicted: {min_stock:.0f}L
+Avg sales: {recent_sales_trend:.1f}L per 5min
+Focus on depletion risk and recommended action."""
+
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",  
+        messages=[{"role": "user", "content": prompt}]
     )
+    return response.choices[0].message.content
 
 def get_prophet_prediction(db: Session, station_id: str, fuel_type: str, periods: int = 10):
     query = db.query(FuelData.timestamp, FuelData.stock_liters, FuelData.sales_last_5min_liters)\

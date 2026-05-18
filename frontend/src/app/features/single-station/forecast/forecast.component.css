@@ -1,0 +1,31 @@
+.forecast__header {
+  margin-bottom: 16px;
+}
+
+.forecast__header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.forecast__controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.forecast__controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.forecast__table-wrap {
+  max-height: 520px;
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid #e5e9ef;
+}
