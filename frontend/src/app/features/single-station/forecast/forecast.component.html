@@ -32,7 +32,7 @@
     </button>
   </form>
 
-  <app-loading-spinner *ngIf="loading" message="Training Prophet model on the backend…"></app-loading-spinner>
+  <app-loading-spinner *ngIf="loading" message="Training Prophet model…"></app-loading-spinner>
 
   <app-empty-state
     *ngIf="!loading && error"
@@ -45,27 +45,25 @@
     *ngIf="!loading && !error && rows.length === 0"
     tone="info"
     title="No forecast yet"
-    message="Pick a station and click Generate forecast to build a stock depletion prediction.">
+    message="Pick a station and click Generate forecast.">
   </app-empty-state>
 
-  <div *ngIf="!loading && rows.length > 0" class="forecast__table-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Predicted stock</th>
-          <th>Lower bound</th>
-          <th>Upper bound</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let row of rows">
-          <td>{{ row.ds }}</td>
-          <td>{{ row.yhat | number:'1.0-0' }}</td>
-          <td>{{ row.yhat_lower | number:'1.0-0' }}</td>
-          <td>{{ row.yhat_upper | number:'1.0-0' }}</td>
-        </tr>
-      </tbody>
-    </table>
+  <div *ngIf="!loading && rows.length > 0" class="forecast__results">
+    
+    <!-- Chart -->
+    <div class="forecast__chart">
+      <canvas baseChart
+        [data]="chartData"
+        [options]="chartOptions"
+        type="line">
+      </canvas>
+    </div>
+
+    <!-- Narrative -->
+    <div *ngIf="narrative" class="forecast__narrative">
+      <h3>🤖 AI Analysis</h3>
+      <p>{{ narrative }}</p>
+    </div>
+
   </div>
 </section>

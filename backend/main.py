@@ -28,5 +28,6 @@ app.add_middleware(
 models.Base.metadata.create_all(bind=engine)
 app.include_router(ingest.router, prefix="/ingest", tags=["Ingest"])
 app.include_router(data.router, tags=["Read"])
-app.include_router(prophet_routes.router)
 app.include_router(report_routes.router, tags=["Report"]) 
+app.include_router(prophet_routes.router)
+

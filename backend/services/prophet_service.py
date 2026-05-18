@@ -3,7 +3,6 @@ import pandas as pd
 from prophet import Prophet
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
-from google import genai
 from ..database.models import FuelData
 from sqlalchemy import text
 from ..database.models import FuelData

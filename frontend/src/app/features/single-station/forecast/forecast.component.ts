@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
+import { ChartData, ChartOptions } from 'chart.js';
 
 import { ForecastPoint, FuelType, Station } from '../../../core/models';
 import { ForecastService } from '../../../core/services/forecast.service';
@@ -22,10 +23,27 @@ export class ForecastComponent implements OnInit, OnDestroy {
   stationId = '';
   fuelType: FuelType = 'Gasoil50';
   periods = 24;
+  narrative = '';
 
   rows: ForecastPoint[] = [];
   loading = false;
   error?: string;
+
+  chartData: ChartData<'line'> = { labels: [], datasets: [] };
+  chartOptions: ChartOptions<'line'> = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      tooltip: { mode: 'index', intersect: false }
+    },
+    scales: {
+      x: { ticks: { maxTicksLimit: 8 } },
+      y: {
+        title: { display: true, text: 'Stock (Liters)' },
+        ticks: { callback: (v) => `${v}L` }
+      }
+    }
+  };
 
   private readonly destroy$ = new Subject<void>();
 
@@ -50,14 +68,16 @@ export class ForecastComponent implements OnInit, OnDestroy {
   }
 
   generate(): void {
-    if (!this.stationId) {
-      return;
-    }
+    if (!this.stationId) return;
     this.loading = true;
     this.error = undefined;
-    this.forecastService.getPredictions(this.stationId, this.fuelType, this.periods).subscribe({
+    this.narrative = '';
+
+    this.forecastService.getPredictionsWithNarrative(this.stationId, this.fuelType, this.periods).subscribe({
       next: data => {
-        this.rows = data ?? [];
+        this.rows = data.forecast ?? [];
+        this.narrative = data.narrative ?? '';
+        this.buildChart();
         this.loading = false;
       },
       error: () => {
@@ -65,5 +85,38 @@ export class ForecastComponent implements OnInit, OnDestroy {
         this.loading = false;
       }
     });
+  }
+
+  private buildChart(): void {
+    const labels = this.rows.map(r => r.ds.substring(11, 16)); // HH:MM
+    this.chartData = {
+      labels,
+      datasets: [
+        {
+          label: 'Predicted Stock',
+          data: this.rows.map(r => r.yhat),
+          borderColor: '#0066cc',
+          backgroundColor: 'rgba(0,102,204,0.1)',
+          fill: true,
+          tension: 0.4
+        },
+        {
+          label: 'Upper Bound',
+          data: this.rows.map(r => r.yhat_upper),
+          borderColor: 'rgba(0,180,0,0.5)',
+          borderDash: [5, 5],
+          fill: false,
+          tension: 0.4
+        },
+        {
+          label: 'Lower Bound',
+          data: this.rows.map(r => r.yhat_lower),
+          borderColor: 'rgba(255,100,0,0.5)',
+          borderDash: [5, 5],
+          fill: false,
+          tension: 0.4
+        }
+      ]
+    };
   }
 }

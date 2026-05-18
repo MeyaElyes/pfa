@@ -4,7 +4,7 @@ import random
 from datetime import datetime, timezone
 
 BASE_URL = "http://localhost:8000"
-STATION_ID = "BI00001"
+STATION_ID = "BI00002"
 ANOMALY_FREQUENCY = 0.01
 class StationAgent:
     def __init__(self):

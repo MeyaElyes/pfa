@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { NgChartsModule } from 'ng2-charts';
 
 import { SharedModule } from '../../shared/shared.module';
 import { AlertsComponent } from './alerts/alerts.component';
@@ -21,6 +22,6 @@ import { MarkdownModule } from 'ngx-markdown';
     ChatComponent,
     ReportComponent
   ],
-  imports: [SharedModule, SingleStationRoutingModule, MarkdownModule.forChild()]
+  imports: [SharedModule, SingleStationRoutingModule, MarkdownModule.forChild(), NgChartsModule]
 })
 export class SingleStationModule {}
