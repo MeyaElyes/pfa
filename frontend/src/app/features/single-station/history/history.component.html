@@ -25,30 +25,58 @@
     <div *ngIf="recordCount > 0" class="history__summary">
       <app-stat-card label="Records" [value]="recordCount"></app-stat-card>
       <app-stat-card label="Min stock" [value]="(minStock | number:'1.0-0') + ' L'"></app-stat-card>
+      <app-stat-card label="Avg stock" [value]="(avgStock | number:'1.0-0') + ' L'"></app-stat-card>
       <app-stat-card label="Max stock" [value]="(maxStock | number:'1.0-0') + ' L'"></app-stat-card>
     </div>
 
-    <div *ngIf="rows.length > 0" class="history__table-wrap">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Timestamp</th>
-            <th>Stock (L)</th>
-            <th>Capacity (L)</th>
-            <th>Price (TND)</th>
-            <th>Sales / 5 min (L)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of rows">
-            <td>{{ row.timestamp }}</td>
-            <td>{{ row.stock_liters | number:'1.0-0' }}</td>
-            <td>{{ row.capacity_liters | number:'1.0-0' }}</td>
-            <td>{{ row.price_tnd | number:'1.3-3' }}</td>
-            <td>{{ row.sales_last_5min_liters | number:'1.0-0' }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div *ngIf="rows.length > 0" class="history__charts">
+      <!-- Stock Level Chart -->
+      <div class="history__chart-card">
+        <h3>Stock Level Over Time</h3>
+        <div class="history__chart-container">
+          <canvas baseChart
+            [data]="stockChartData"
+            [options]="stockChartOptions"
+            type="line">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- Price Trend Chart -->
+      <div class="history__chart-card">
+        <h3>Price Trend</h3>
+        <div class="history__chart-container">
+          <canvas baseChart
+            [data]="priceChartData"
+            [options]="priceChartOptions"
+            type="line">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- Sales Activity Chart -->
+      <div class="history__chart-card">
+        <h3>Sales Activity (5-min intervals)</h3>
+        <div class="history__chart-container">
+          <canvas baseChart
+            [data]="salesChartData"
+            [options]="salesChartOptions"
+            type="bar">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- Capacity vs Stock Chart -->
+      <div class="history__chart-card">
+        <h3>Capacity vs Stock Comparison</h3>
+        <div class="history__chart-container">
+          <canvas baseChart
+            [data]="capacityChartData"
+            [options]="capacityChartOptions"
+            type="line">
+          </canvas>
+        </div>
+      </div>
     </div>
 
     <app-empty-state

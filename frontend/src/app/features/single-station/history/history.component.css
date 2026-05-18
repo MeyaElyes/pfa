@@ -29,12 +29,48 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
-.history__table-wrap {
-  max-height: 480px;
-  overflow: auto;
-  border-radius: 12px;
+.history__charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.history__chart-card {
+  background: #fff;
   border: 1px solid #e5e9ef;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease;
+}
+
+.history__chart-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.history__chart-card h3 {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.history__chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .history__charts {
+    grid-template-columns: 1fr;
+  }
+
+  .history__summary {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
 }
