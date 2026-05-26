@@ -1,0 +1,75 @@
+services:
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: fuelmonitor
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/fuelmonitor
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_USE_TLS: ${SMTP_USE_TLS}
+      SMTP_FROM: ${SMTP_FROM}
+      MANAGER_EMAIL: ${MANAGER_EMAIL}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  chat:
+    build:
+      context: .
+      dockerfile: chat/Dockerfile
+    environment:
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      BACKEND_MODE: real
+      BACKEND_URL: http://backend:8000
+      SERVICE_PORT: 8001
+    volumes:
+      - chroma_data:/app/chroma_db
+    depends_on:
+      - backend
+    ports:
+      - "8001:8001"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+      - chat
+    ports:
+      - "80:80"
+
+  agent:
+    build:
+      context: .
+      dockerfile: stations/Dockerfile
+    environment:
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      - backend
+    restart: on-failure
+
+volumes:
+  postgres_data:
+  chroma_data:
